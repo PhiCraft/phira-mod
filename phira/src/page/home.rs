@@ -1,7 +1,7 @@
 prpr_l10n::tl_file!("home");
 
 use super::{
-    load_font_with_cksum, load_local, set_bold_font, EventPage, LibraryPage, MessagePage, NextPage, Page, ResPackPage, SFader, SettingsPage,
+    load_font_with_cksum, set_bold_font, EventPage, LibraryPage, MessagePage, NextPage, Page, ResPackPage, SFader, SettingsPage,
     SharedState, BOLD_FONT_CKSUM,
 };
 use crate::{
@@ -11,7 +11,7 @@ use crate::{
     icons::Icons,
     login::Login,
     save_data,
-    scene::{check_read_tos_and_policy, ProfileScene, SongScene, JUST_LOADED_TOS},
+    scene::{check_read_tos_and_policy, ProfileScene, JUST_LOADED_TOS},
     sync_data,
     threed::ThreeD,
 };
@@ -24,7 +24,7 @@ use prpr::{
     core::BOLD_FONT,
     ext::{open_url, screen_aspect, semi_black, semi_white, RectExt, SafeTexture, ScaleType},
     info::ChartInfo,
-    scene::{show_error, show_message, NextScene},
+    scene::{show_error, NextScene},
     task::Task,
     ui::{button_hit_large, clip_rounded_rect, ClipType, DRectButton, Dialog, FontArc, RectButton, Scroll, Ui},
 };
@@ -55,8 +55,6 @@ pub struct HomePage {
     icons: Arc<Icons>,
 
     btn_play: DRectButton,
-    /// 随机选歌：从本地谱面里随便挑一首直接开始
-    btn_random: DRectButton,
     btn_event: DRectButton,
     btn_respack: DRectButton,
     btn_msg: DRectButton,
@@ -142,7 +140,6 @@ impl HomePage {
             icons: Arc::clone(&icons),
 
             btn_play: DRectButton::new().with_delta(-0.01).no_sound(),
-            btn_random: DRectButton::new().with_radius(0.008).with_delta(-0.003).with_elevation(0.002),
             btn_event: DRectButton::new().with_elevation(0.002).no_sound(),
             btn_respack: DRectButton::new().with_elevation(0.002).no_sound(),
             btn_msg: DRectButton::new().with_radius(0.008).with_delta(-0.003).with_elevation(0.002),
@@ -332,10 +329,6 @@ impl HomePage {
                     // 播放图标在卡片左下角
                     let icon = Rect::new(card.x + 0.02, card.bottom() - 0.18, 0.17, 0.17);
                     ui.fill_rect(icon, (*self.icons.play, icon, ScaleType::Fit, semi_white(0.6)));
-                    // 随机选歌：卡片右下角，和左下角的播放图标对称。
-                    // （之前这里用 r 算，结果直接压在播放图标上，两个糊成一团。）
-                    let rb = Rect::new(card.right() - 0.19, card.bottom() - 0.18, 0.17, 0.17);
-                    self.btn_random.render_text(ui, rb, t, tl!("random-pick"), 0.42, false);
                 });
                 top + 0.03
             })
@@ -427,25 +420,6 @@ impl Page for HomePage {
             if self.btn_play.touch(touch, t) {
                 button_hit_large();
                 self.next_page = Some(NextPage::Overlay(Box::new(LibraryPage::new(Arc::clone(&self.icons), s.icons.clone())?)));
-                return Ok(true);
-            }
-            if self.btn_random.touch(touch, t) {
-                // 随机选歌：直接从本地谱面里随机挑一首进游戏
-                button_hit_large();
-                let charts = load_local();
-                if charts.is_empty() {
-                    show_message(tl!("random-no-chart")).warn();
-                } else {
-                    let seed = random::<u32>() as usize;
-                    let chart = charts[seed % charts.len()].clone();
-                    let local_path = chart.local_path.clone();
-                    let mods = local_path
-                        .as_ref()
-                        .and_then(|path| get_data().charts.iter().find(|it| &it.local_path == path).map(|it| it.mods))
-                        .unwrap_or_default();
-                    self.sf
-                        .goto(s.t, SongScene::new(chart, local_path, Arc::clone(&self.icons), s.icons.clone(), mods));
-                }
                 return Ok(true);
             }
             if self.btn_event.touch(touch, t) {
