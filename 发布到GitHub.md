@@ -140,10 +140,10 @@ cd launcher/src-tauri && cargo build --release
 仓库里有两个 workflow，都是**手动触发**（`workflow_dispatch`）：
 
 1. **Actions** 标签页 → 左侧选 **Android** → 右上 **Run workflow** → 选 `main` → Run
-   - 跑在 ubuntu，计费 1×，首次约 20–30 分钟
+   - 跑在 ubuntu，首次约 20–30 分钟。**公开仓库的 Actions 分钟数免费、不计额度**
    - 结束后在这个 workflow 的页面底部 **Artifacts** 里下载 APK
 2. 左侧选 **iOS** → Run workflow
-   - 跑在 macOS，计费 **10×**（同样的时间要多花 10 倍额度，注意）
+   - 跑在 macOS（**公开仓库同样免费**；只有私有仓库才按 10 倍扣每月额度）
    - 产物是**无签名 IPA**，使用者要用 AltStore / Sideloadly 自己签
 
 两个 workflow 都会在构建时**自动补齐缺失资源**（从官方 APK 提取字体和背景图），
