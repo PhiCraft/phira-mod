@@ -90,47 +90,49 @@ jobs:
           cache-on-failure: "true"
           cache-all-crates: "true"
 
-      # assets/font.ttf 与 background.jpg 都被 .gitignore 忽略（font.ttf 是 git add -f 进去的，
-      # 仍然很脆）；缺任何一个运行时都会直接启动失败。这里统一兜底：
-      # 先看仓库里有没有，缺了就从官方 APK 提取，再不行从官方地址取，最后才用占位图。
-      - name: Prepare runtime assets (font.ttf / background.jpg)
+      # 仓库里**不带官方资源**（图片 / 音效，见 README 的授权说明），只带字体。
+      # 所以这里必须从官方 APK 把整套 assets 补齐 —— 只补 font.ttf / background.jpg 是不够的：
+      # 少了任何一个 ogg / png，App 会在启动时直接崩
+      # （实测：Couldn't load file button_large.ogg: AndroidAssetLoadingError）。
+      - name: Prepare runtime assets (从官方 APK 补齐)
         run: |
           set -euo pipefail
-          # 官方 APK 只是拿来提取资源，绝不能留到 artifact 里
-          trap 'rm -f official.apk' EXIT
-          MISSING=""
-          [ -f assets/background.jpg ] || MISSING="$MISSING background.jpg"
-          [ -f assets/font.ttf ] || MISSING="$MISSING font.ttf"
-          if [ -n "$MISSING" ]; then
-            echo "仓库里缺少:$MISSING，尝试从官方 APK 提取"
-            APK_URL=$(curl -fsSL --connect-timeout 10 --max-time 90 \
-              -H "Authorization: Bearer ${{ github.token }}" \
-              -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/TeamFlos/phira/releases/latest \
-              | grep -oE '"browser_download_url":[[:space:]]*"[^"]+\.apk"' \
-              | head -n1 | sed -E 's/.*"(https:[^"]+)".*/\1/' || true)
-            if [ -n "${APK_URL:-}" ] && curl -fL --retry 3 --connect-timeout 10 --max-time 300 -o official.apk "$APK_URL"; then
-              for f in $MISSING; do
-                ENTRY=$(unzip -Z1 official.apk | grep -iE "(^|/)$f\$" | head -n1 || true)
-                if [ -n "${ENTRY:-}" ]; then
-                  unzip -o -j official.apk "$ENTRY" -d assets
-                  echo "extracted $ENTRY"
-                fi
-              done
-            fi
+          # 官方 APK 只用来提取资源，绝不能留进 artifact
+          trap 'rm -f official.apk; rm -rf _apk' EXIT
+          APK_URL=$(curl -fsSL --connect-timeout 10 --max-time 90 \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/TeamFlos/phira/releases/latest \
+            | grep -oE '"browser_download_url":[[:space:]]*"[^"]+\.apk"' \
+            | head -n1 | sed -E 's/.*"(https:[^"]+)".*/\1/' || true)
+          if [ -z "${APK_URL:-}" ]; then
+            echo "::error::拿不到官方 APK 的下载地址（GitHub API 失败）"
+            exit 1
           fi
+          echo "官方 APK: $APK_URL"
+          curl -fL --retry 3 --connect-timeout 10 --max-time 600 -o official.apk "$APK_URL"
+          # 整套 assets 覆盖进来（保留子目录：respack/ rank/ 等；同名文件以官方为准）
+          mkdir -p _apk
+          unzip -o -q official.apk 'assets/*' -d _apk
+          cp -r _apk/assets/. assets/
+          echo "--- 补齐后的 assets 顶层条目 ---"
+          ls assets | head -n 40
+          echo "条目数: $(ls assets | wc -l)"
+          # 字体兜底：官方包里没有就从官方地址取
           if [ ! -f assets/font.ttf ]; then
-            echo "font.ttf 仍未取到，试官方地址"
+            echo "font.ttf 未取到，试官方地址"
             curl -fL --retry 3 --connect-timeout 10 --max-time 180 -o assets/font.ttf https://mivik.moe/prpr/font.ttf || true
           fi
           if [ ! -f assets/background.jpg ]; then
             echo "::warning::assets/background.jpg 缺失，用 assets/abstract.jpg 顶替"
             cp assets/abstract.jpg assets/background.jpg
           fi
-          # 缺 font.ttf 时直接失败，不要产出一个装了就崩的包
+          # 关键资源缺任何一个都直接失败，不要产出装了就崩的包
           test -f assets/font.ttf
           test -f assets/background.jpg
-          ls -lh assets/background.jpg assets/font.ttf
+          test -f assets/button_large.ogg
+          test -f assets/phigros.ttf
+          ls -lh assets/font.ttf assets/background.jpg assets/button_large.ogg
 
       # 签名的 keystore 第一次生成后缓存起来，这样后续构建签名一致、可以直接覆盖安装
       - name: Restore signing keystore
