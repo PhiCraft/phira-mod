@@ -284,8 +284,6 @@ async fn the_main() -> Result<()> {
 
     // 游戏内场景（开场动画 / 结算画面）统一用 assets/font.ttf
     let game_font = FontArc::try_from_vec(load_file("font.ttf").await?)?;
-    // 界面字体也用它（见下面），先留一份克隆
-    let game_font_for_ui = game_font.clone();
     GAME_FONT.with({
         let game_font = game_font.clone();
         move |it| *it.borrow_mut() = Some(TextPainter::new(game_font, None))
@@ -303,8 +301,12 @@ async fn the_main() -> Result<()> {
     // 都是 OFL 系字体）。原来用的是 assets/pingfang.otf，那是苹果的 PingFang SC，
     // **不允许随应用再分发**，开源发布会有授权问题，所以换成这套自带的。
     // 两份 painter 共用同一个 FontArc（Arc 引用计数），不会把 13MB 字体在内存里存两遍。
-    let builtin_ui_font = game_font_for_ui.clone();
-    crash_log_stage("界面字体沿用 font.ttf");
+    // 界面字体用 assets/harmonyos.ttf（HarmonyOS Sans SC）：华为免费商用授权、可随应用分发。
+    // 原来用的 assets/pingfang.otf 是苹果 PingFang SC，不允许再分发，开源时会踩授权问题。
+    // 这跟游戏内文字用的 font.ttf 是两套字体，风格不同是有意的。
+    // 设置里导入的自定义界面字体依然优先（写到 <data>/font.ttf）。
+    let builtin_ui_font = FontArc::try_from_vec(load_file("harmonyos.ttf").await?)?;
+    crash_log_stage("已加载 harmonyos.ttf（界面字体）");
     let custom_font = std::fs::read(format!("{dir}/font.ttf"))
         .ok()
         .and_then(|it| FontArc::try_from_vec(it).ok());

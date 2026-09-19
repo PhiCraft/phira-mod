@@ -1970,6 +1970,11 @@ fn apply_upload_profile_to(config: &mut Config) -> usize {
     config.late_leniency_ms = 0.;
     config.drag_protect = false;
     config.flick_protect = false;
+    // 下面两个是引擎判断「能否上传」的直接条件（见 prpr/src/scene/game.rs 里构造
+    // record_data 那一段），之前一直漏着 —— 开了离线模式或键盘游玩时，就算 mod 全清、
+    // 速度 1.0，照样不上传，而且只弹一句「不能上传」，极难排查。
+    config.offline_mode = false;
+    config.use_keyboard = false;
     config.upload_record = true;
     turned
 }

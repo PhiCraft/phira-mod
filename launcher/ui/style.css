@@ -1,6 +1,6 @@
 /* ============================================================
    Phira 联机开服器 —— 磨砂玻璃界面
-   字体：随程序打包的 fonts/app-font.ttf（Source Han Sans + Saira + Noto，OFL 系；
+   字体：随程序打包的 fonts/app-font.ttf（HarmonyOS Sans SC，华为免费商用；
 
    磨砂玻璃 = 半透明染色 + backdrop-filter 模糊 + 发丝边 + 柔和阴影。
    刻意不做边缘折射 / SVG 滤镜那一套：那种效果必须靠眼睛反复调，
@@ -8,7 +8,7 @@
    ============================================================ */
 
 @font-face {
-  font-family: "App Sans";
+  font-family: "HarmonyOS Sans SC";
   src: url("fonts/app-font.ttf") format("truetype");
   font-weight: 100 900;
   font-display: swap;
@@ -48,7 +48,7 @@
 
   --radius: 20px;
   --radius-sm: 12px;
-  --font: "App Sans", "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
+  --font: "HarmonyOS Sans SC", "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
   --mono: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
   --ease: cubic-bezier(.2, .8, .2, 1);
 }
