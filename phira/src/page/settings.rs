@@ -1952,20 +1952,18 @@ impl DebugList {
 /// 直接吃现成的 `&mut Config`，避免在已经借了 config 的地方再 get_data_mut()。
 fn apply_upload_profile_to(config: &mut Config) -> usize {
     use prpr::config::Mods;
-    let mut turned = 0;
-    for m in [
-        Mods::AUTOPLAY,
-        Mods::NO_SHADER,
-        Mods::NO_COMBO_SCORE,
-        Mods::FULL_SCREEN_JUDGE,
-        Mods::HEALTH_MODE,
-    ] {
-        if config.mods.contains(m) {
-            config.mods.remove(m);
-            turned += 1;
-        }
+    // 以前这里只清了 5 个 mod（AUTOPLAY / NO_SHADER / NO_COMBO_SCORE /
+    // FULL_SCREEN_JUDGE / HEALTH_MODE），别的 mod（FLIP_X、NIGHTCORE、FADE_IN/OUT、
+    // RAINBOW、INSTANT_DEATH_* …）还留着 —— 引擎照样判定"这张谱面被改过"，
+    // 于是按了「一键切换到可上传配置」之后依然弹「不能上传成绩」。直接全清。
+    let turned = config.mods.bits().count_ones() as usize;
+    config.mods = Mods::empty();
+    // 每张谱面还各自记了一份 mod（LocalChart.mods），不清的话单独某张谱面照样传不了
+    for chart in &mut get_data_mut().charts {
+        chart.mods = Mods::default();
     }
     config.speed = 1.;
+    // 判定窗口回到官方默认；good / bad 用 None 表示"跟着 perfect 派生"
     config.judge_window = Config::DEFAULT_JUDGE_WINDOW;
     config.judge_window_good = None;
     config.judge_window_bad = None;
