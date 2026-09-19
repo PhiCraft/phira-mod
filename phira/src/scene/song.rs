@@ -856,6 +856,7 @@ impl SongScene {
         is_unlock: bool,
     ) -> Result<LocalSceneTask> {
         let mut fs = fs_from_path(local_path)?;
+        #[allow(unused)]
         let can_rated = id.is_some() || local_path.starts_with(':');
         #[cfg(feature = "video")]
         let local_path = local_path.to_owned();
@@ -865,7 +866,12 @@ impl SongScene {
             !config.offline_mode && can_rated && !mods.intersects(Mods::UNRATED) && !config.use_keyboard && config.speed >= 1.0 - 1e-3
         };
         #[cfg(not(closed))]
+        #[allow(unused)]
         let rated = false;
+        // 这句提示只在支持上传的构建里有意义：开源构建里 rated 恒为 false
+        // （上面 cfg(not(closed)) 那个分支），上传编码器 encode_record 又在闭源的
+        // inner 模块里 —— 上传本来就不可能成功，再弹这句只会让人以为是设置问题。
+        #[cfg(closed)]
         if !rated && can_rated && mode == GameMode::Normal {
             show_message(tl!("warn-unrated")).warn();
         }

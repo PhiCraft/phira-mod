@@ -255,7 +255,7 @@ item-late-leniency-sub = 判定时把「按晚了」的误差减掉这么多；0
 item-note-trail-count = 残影数量
 item-note-trail-count-sub = 每个音符画几层残影（1~255，越多越连续也越吃性能）
 item-upload = 上传成绩
-item-upload-sub = 打完官方谱面后把本局成绩上传到 Phira 官方服务器（默认关；关掉时成绩只存本机）
+item-upload-sub = 【本构建不支持上传】开源构建的上传通道是关的（官方上传要用闭源模块里的成绩编码器），此开关目前无实际作用，成绩只存本机。想要上传请用官方客户端。
 item-upload-consent = 成绩上传协议
 item-upload-consent-open = 查看
 upload-consent-title = 成绩上传：知情同意与免责声明
@@ -279,7 +279,7 @@ upload-consent-text =
     由使用者自行承担，作者不承担任何责任。本 Mod 按现状提供，不附带任何担保。
 
     你随时可以在设置里关闭这个开关。item-upload-profile = 一键可上传配置
-item-upload-profile-sub = 关掉所有不计分 / 影响公平的选项（自动播放、全屏判定、血条模式、去连击分、变速），判定窗口恢复官方 ±80/160/220、late 补偿归零，并打开成绩上传
+item-upload-profile-sub = 【不支持上传，但本按钮仍会关掉所有不计分 / 影响公平的选项】（自动播放、全屏判定、血条模式、去连击分、变速），判定窗口恢复官方 ±80/160/220、late 补偿归零，并打开成绩上传
 item-upload-profile-apply = 一键配置
 upload-profile-done = 已切换为可上传成绩配置：关闭了 { $mods } 个不计分 Mod，速度 1.0、判定窗口恢复官方值、late 补偿 0，并已打开成绩上传item-music-spectrum = 音乐可视化
 item-music-spectrum-sub = 沿判定线画音频频谱条（对音乐做 FFT，纯本地，吃一点性能）
